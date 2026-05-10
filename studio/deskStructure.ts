@@ -1,5 +1,5 @@
 import type {StructureBuilder} from 'sanity/structure'
-import {HomeIcon, HouseIcon, CogIcon} from '@sanity/icons'
+import {HomeIcon, HomeIcon, CogIcon} from '@sanity/icons'
 
 export const deskStructure = (S: StructureBuilder) =>
   S.list()
@@ -7,7 +7,7 @@ export const deskStructure = (S: StructureBuilder) =>
     .items([
       S.listItem()
         .title('Propiedades')
-        .icon(HouseIcon)
+        .icon(HomeIcon)
         .child(
           S.list()
             .title('Propiedades')

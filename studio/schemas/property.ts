@@ -1,11 +1,11 @@
 import {defineField, defineType} from 'sanity'
-import {HouseIcon} from '@sanity/icons'
+import {HomeIcon} from '@sanity/icons'
 
 export const property = defineType({
   name: 'property',
   title: 'Propiedad',
   type: 'document',
-  icon: HouseIcon,
+  icon: HomeIcon,
   groups: [
     {name: 'main', title: 'Datos principales', default: true},
     {name: 'details', title: 'Detalles'},
