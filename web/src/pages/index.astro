@@ -1,4 +1,17 @@
 ---
-// Redirect root to default language
-return Astro.redirect('/es/')
+// Static redirect with relative URL — works regardless of which domain serves the site
 ---
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <title>Eva Buzón Real Estate</title>
+    <meta http-equiv="refresh" content="0;url=/es/">
+    <link rel="canonical" href="/es/">
+    <meta name="robots" content="noindex">
+    <script>location.replace('/es/')</script>
+  </head>
+  <body>
+    <p>Redirigiendo a <a href="/es/">/es/</a>…</p>
+  </body>
+</html>
