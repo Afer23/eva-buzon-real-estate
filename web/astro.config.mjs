@@ -5,17 +5,17 @@ import tailwind from '@astrojs/tailwind'
 const SITE = process.env.PUBLIC_SITE_URL || 'https://evabuzonrealestate.com'
 
 export default defineConfig({
-  site: SITE,
-  integrations: [tailwind()],
-  i18n: {
-    defaultLocale: 'es',
-    locales: ['es', 'en'],
-    routing: {
-      prefixDefaultLocale: true,
-      redirectToDefaultLocale: true,
+    site: SITE,
+    integrations: [tailwind()],
+    i18n: {
+          defaultLocale: 'es',
+          locales: ['es', 'en'],
+          routing: {
+                  prefixDefaultLocale: true,
+                  redirectToDefaultLocale: false,
+          },
     },
-  },
-  image: {
-    remotePatterns: [{protocol: 'https', hostname: 'cdn.sanity.io'}],
-  },
+    image: {
+          remotePatterns: [{protocol: 'https', hostname: 'cdn.sanity.io'}],
+    },
 })
