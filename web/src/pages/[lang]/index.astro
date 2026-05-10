@@ -1,0 +1,108 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import PropertyCard from '@/components/PropertyCard.astro'
+import {getFeaturedProperties, getRecentProperties, getAboutPage} from '@/lib/queries'
+import {urlFor} from '@/lib/sanity'
+import {useTranslations, type Lang, pickLang, localizedPath} from '@/i18n/utils'
+
+export function getStaticPaths() {
+  return [{params: {lang: 'es'}}, {params: {lang: 'en'}}]
+}
+
+const {lang} = Astro.params as {lang: Lang}
+const t = useTranslations(lang)
+
+const [featured, recent, about] = await Promise.all([
+  getFeaturedProperties(6),
+  getRecentProperties(6),
+  getAboutPage(),
+])
+
+const display = featured.length > 0 ? featured : recent
+const showRecentSection = featured.length > 0 && recent.length > 0
+---
+
+<BaseLayout
+  title={t('home.hero.title')}
+  description={t('home.hero.subtitle')}
+>
+  <!-- Hero -->
+  <section class="container-x pt-12 md:pt-20 pb-12 grid md:grid-cols-2 gap-12 items-center">
+    <div>
+      <h1 class="font-serif text-4xl md:text-6xl leading-tight mb-6">
+        {t('home.hero.title')}
+      </h1>
+      <p class="text-lg text-ink-400 mb-8 max-w-md">
+        {t('home.hero.subtitle')}
+      </p>
+      <a href={localizedPath(lang, '/propiedades')} class="btn-primary">
+        {t('home.hero.cta')}
+      </a>
+    </div>
+    {about?.photo ? (
+      <div class="aspect-[4/5] overflow-hidden rounded-lg">
+        <img
+          src={urlFor(about.photo).width(700).height(875).fit('crop').url()}
+          alt="Eva Buzón Martínez"
+          class="w-full h-full object-cover"
+        />
+      </div>
+    ) : (
+      <div class="aspect-[4/5] bg-gradient-to-br from-terracotta-100 to-bone-200 rounded-lg flex items-center justify-center text-ink-300 text-sm">
+        Foto de Eva (subir desde el Studio)
+      </div>
+    )}
+  </section>
+
+  <!-- Featured / Recent properties -->
+  {display.length > 0 && (
+    <section class="container-x py-12">
+      <div class="flex items-end justify-between mb-8">
+        <h2 class="font-serif text-3xl">
+          {featured.length > 0 ? t('home.featured.title') : t('home.recent.title')}
+        </h2>
+        <a href={localizedPath(lang, '/propiedades')} class="text-sm text-terracotta hover:underline">
+          {t('nav.properties')} →
+        </a>
+      </div>
+      <div class="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+        {display.map((p) => <PropertyCard property={p} lang={lang} />)}
+      </div>
+    </section>
+  )}
+
+  <!-- About teaser -->
+  {about && (
+    <section class="container-x py-16 border-t border-ink-200/40">
+      <div class="grid md:grid-cols-2 gap-12 items-center">
+        <div>
+          <p class="uppercase text-xs tracking-wider text-terracotta mb-2">{t('home.about.title')}</p>
+          {about.headline && (
+            <h2 class="font-serif text-3xl md:text-4xl mb-4">
+              {pickLang(about.headline, lang)}
+            </h2>
+          )}
+          <a href={localizedPath(lang, '/sobre')} class="btn-outline">
+            {t('home.about.cta')}
+          </a>
+        </div>
+        {about.highlights && about.highlights.length > 0 && (
+          <div class="grid grid-cols-3 gap-4">
+            {about.highlights.map((h) => (
+              <div class="text-center">
+                <p class="font-serif text-3xl text-terracotta">{h.number}</p>
+                <p class="text-xs text-ink-400 mt-1">{pickLang(h.label, lang)}</p>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
+  )}
+
+  {display.length === 0 && (
+    <section class="container-x py-16 text-center">
+      <p class="text-ink-300">{t('properties.empty')}</p>
+    </section>
+  )}
+</BaseLayout>

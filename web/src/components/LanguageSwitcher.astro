@@ -1,0 +1,18 @@
+---
+import {getLangFromUrl} from '@/i18n/utils'
+
+const lang = getLangFromUrl(Astro.url)
+const otherLang = lang === 'es' ? 'en' : 'es'
+
+// Build the URL for the other language by swapping the lang prefix.
+const path = Astro.url.pathname
+const newPath = path.replace(/^\/(es|en)/, `/${otherLang}`)
+---
+
+<a
+  href={newPath}
+  class="text-sm uppercase tracking-wide hover:text-terracotta border border-ink-200 rounded-full px-3 py-1"
+  aria-label={`Switch to ${otherLang}`}
+>
+  {otherLang}
+</a>

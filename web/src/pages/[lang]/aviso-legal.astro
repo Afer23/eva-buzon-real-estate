@@ -1,0 +1,35 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import {useTranslations, type Lang} from '@/i18n/utils'
+
+export function getStaticPaths() {
+  return [{params: {lang: 'es'}}, {params: {lang: 'en'}}]
+}
+
+const {lang} = Astro.params as {lang: Lang}
+const t = useTranslations(lang)
+---
+
+<BaseLayout title="Aviso legal" noIndex>
+  <section class="container-x py-12 max-w-3xl">
+    <h1 class="font-serif text-3xl mb-6">Aviso legal y privacidad</h1>
+    <div class="prose-property text-ink-400">
+      <p>
+        Esta web es propiedad de Eva Buzón Martínez, agente inmobiliaria en Andalucía, España.
+      </p>
+      <h2>Información de contacto</h2>
+      <p>Email de contacto: disponible en la sección Contacto.</p>
+      <h2>Tratamiento de datos</h2>
+      <p>
+        Los datos enviados a través del formulario de contacto se utilizan únicamente
+        para responder a tu consulta. No se ceden a terceros y puedes solicitar su
+        eliminación en cualquier momento escribiendo al email de contacto.
+      </p>
+      <h2>Cookies</h2>
+      <p>
+        Esta web no utiliza cookies de seguimiento ni de publicidad. Solo se usan las
+        técnicas estrictamente necesarias para el funcionamiento del sitio.
+      </p>
+    </div>
+  </section>
+</BaseLayout>

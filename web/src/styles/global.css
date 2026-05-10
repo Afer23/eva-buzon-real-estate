@@ -1,0 +1,47 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-bone text-ink-500 font-sans;
+  }
+  h1, h2, h3, h4 {
+    @apply font-serif text-ink;
+  }
+  ::selection {
+    @apply bg-terracotta-100 text-terracotta-700;
+  }
+}
+
+@layer components {
+  .container-x {
+    @apply max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 px-5 py-3 rounded-full font-medium transition;
+  }
+  .btn-primary {
+    @apply btn bg-terracotta text-white hover:bg-terracotta-600 active:bg-terracotta-700;
+  }
+  .btn-secondary {
+    @apply btn bg-ink text-bone hover:bg-ink-400;
+  }
+  .btn-outline {
+    @apply btn border border-ink-200 text-ink hover:bg-bone-200;
+  }
+  .btn-whatsapp {
+    @apply btn bg-[#25D366] text-white hover:bg-[#1ebe5a];
+  }
+}
+
+/* Portable Text rendered prose */
+.prose-property p { @apply mb-4 leading-relaxed; }
+.prose-property h2 { @apply text-2xl mt-8 mb-3; }
+.prose-property h3 { @apply text-xl mt-6 mb-2; }
+.prose-property ul { @apply list-disc list-inside mb-4; }
+.prose-property a { @apply text-terracotta underline; }

@@ -1,0 +1,46 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import PropertyCard from '@/components/PropertyCard.astro'
+import {getAllProperties} from '@/lib/queries'
+import {useTranslations, type Lang} from '@/i18n/utils'
+
+export function getStaticPaths() {
+  return [{params: {lang: 'es'}}, {params: {lang: 'en'}}]
+}
+
+const {lang} = Astro.params as {lang: Lang}
+const t = useTranslations(lang)
+
+const properties = await getAllProperties()
+const available = properties.filter((p) => p.status === 'available')
+const reserved = properties.filter((p) => p.status === 'reserved')
+const closed = properties.filter((p) => p.status === 'closed')
+---
+
+<BaseLayout title={t('properties.title')} description={t('properties.subtitle')}>
+  <section class="container-x py-12 md:py-16">
+    <h1 class="font-serif text-4xl md:text-5xl mb-3">{t('properties.title')}</h1>
+    <p class="text-ink-400 mb-12 max-w-xl">{t('properties.subtitle')}</p>
+
+    {available.length === 0 && reserved.length === 0 && closed.length === 0 && (
+      <p class="text-ink-300 py-12 text-center">{t('properties.empty')}</p>
+    )}
+
+    {available.length > 0 && (
+      <>
+        <div class="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+          {available.map((p) => <PropertyCard property={p} lang={lang} />)}
+        </div>
+      </>
+    )}
+
+    {reserved.length > 0 && (
+      <div class="mt-16">
+        <h2 class="font-serif text-2xl mb-6 text-ink-400">{t('property.status.reserved')}</h2>
+        <div class="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+          {reserved.map((p) => <PropertyCard property={p} lang={lang} />)}
+        </div>
+      </div>
+    )}
+  </section>
+</BaseLayout>

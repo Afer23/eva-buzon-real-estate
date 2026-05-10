@@ -1,0 +1,58 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import ContactForm from '@/components/ContactForm.astro'
+import WhatsAppButton from '@/components/WhatsAppButton.astro'
+import {getSiteSettings} from '@/lib/queries'
+import {useTranslations, type Lang} from '@/i18n/utils'
+
+export function getStaticPaths() {
+  return [{params: {lang: 'es'}}, {params: {lang: 'en'}}]
+}
+
+const {lang} = Astro.params as {lang: Lang}
+const t = useTranslations(lang)
+const settings = await getSiteSettings()
+
+const ref = Astro.url.searchParams.get('ref')
+const context = ref ? (lang === 'en' ? `Property: ${ref}` : `Propiedad: ${ref}`) : undefined
+---
+
+<BaseLayout title={t('contact.title')} description={t('contact.subtitle')}>
+  <section class="container-x py-12 md:py-16">
+    <div class="grid md:grid-cols-2 gap-16 max-w-5xl">
+      <div>
+        <h1 class="font-serif text-4xl md:text-5xl mb-4">{t('contact.title')}</h1>
+        <p class="text-ink-400 mb-8">{t('contact.subtitle')}</p>
+
+        <div class="space-y-4 text-sm">
+          {settings?.contactEmail && (
+            <p>
+              <span class="block text-xs uppercase tracking-wider text-ink-300 mb-1">{t('contact.email')}</span>
+              <a href={`mailto:${settings.contactEmail}`} class="text-ink hover:text-terracotta">{settings.contactEmail}</a>
+            </p>
+          )}
+          {settings?.whatsappNumber && (
+            <p>
+              <span class="block text-xs uppercase tracking-wider text-ink-300 mb-1">WhatsApp</span>
+              <a href={`https://wa.me/${settings.whatsappNumber}`} class="text-ink hover:text-terracotta">+{settings.whatsappNumber}</a>
+            </p>
+          )}
+        </div>
+
+        {settings?.whatsappNumber && (
+          <div class="mt-8">
+            <WhatsAppButton
+              phone={settings.whatsappNumber}
+              message={lang === 'en' ? 'Hi Eva, I\'d like more information.' : 'Hola Eva, querría más información.'}
+              lang={lang}
+            />
+          </div>
+        )}
+      </div>
+
+      <div>
+        <ContactForm lang={lang} context={context} />
+      </div>
+    </div>
+  </section>
+</BaseLayout>

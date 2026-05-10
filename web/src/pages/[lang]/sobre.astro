@@ -1,0 +1,69 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import {getAboutPage} from '@/lib/queries'
+import {urlFor} from '@/lib/sanity'
+import {useTranslations, type Lang, pickLang, pickLangBlock} from '@/i18n/utils'
+import {toHTML} from '@portabletext/to-html'
+
+export function getStaticPaths() {
+  return [{params: {lang: 'es'}}, {params: {lang: 'en'}}]
+}
+
+const {lang} = Astro.params as {lang: Lang}
+const t = useTranslations(lang)
+const about = await getAboutPage()
+
+const headline = about?.headline ? pickLang(about.headline, lang) : null
+const bodyBlock = about?.body ? pickLangBlock(about.body, lang) : null
+const bodyHtml = bodyBlock ? toHTML(bodyBlock) : ''
+---
+
+<BaseLayout title={t('nav.about')} description={headline || ''}>
+  <section class="container-x py-12 md:py-16">
+    <div class="grid md:grid-cols-2 gap-12 items-start">
+      {about?.photo ? (
+        <div class="aspect-[4/5] overflow-hidden rounded-lg">
+          <img
+            src={urlFor(about.photo).width(700).height(875).fit('crop').url()}
+            alt="Eva Buzón Martínez"
+            class="w-full h-full object-cover"
+          />
+        </div>
+      ) : (
+        <div class="aspect-[4/5] bg-bone-200 rounded-lg flex items-center justify-center text-ink-300 text-sm text-center p-8">
+          Foto pendiente de subir desde el panel de Sanity → Sobre Eva
+        </div>
+      )}
+
+      <div>
+        <p class="uppercase text-xs tracking-wider text-terracotta mb-3">{t('home.about.title')}</p>
+        <h1 class="font-serif text-4xl md:text-5xl leading-tight mb-6">
+          {headline || (lang === 'en'
+            ? 'Eva Buzón Martínez · Real estate agent in Andalusia'
+            : 'Eva Buzón Martínez · Agente inmobiliaria en Andalucía')}
+        </h1>
+
+        {bodyHtml ? (
+          <div class="prose-property" set:html={bodyHtml} />
+        ) : (
+          <p class="text-ink-400 leading-relaxed">
+            {lang === 'en'
+              ? 'A short biography will be added soon. In the meantime, feel free to get in touch.'
+              : 'Próximamente añadiré aquí una breve biografía. Mientras tanto, no dudes en contactar.'}
+          </p>
+        )}
+
+        {about?.highlights && about.highlights.length > 0 && (
+          <div class="grid grid-cols-3 gap-4 mt-10 pt-10 border-t border-ink-200/40">
+            {about.highlights.map((h) => (
+              <div>
+                <p class="font-serif text-3xl text-terracotta">{h.number}</p>
+                <p class="text-xs text-ink-400 mt-1">{pickLang(h.label, lang)}</p>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  </section>
+</BaseLayout>

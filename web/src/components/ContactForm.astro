@@ -1,0 +1,67 @@
+---
+import {useTranslations, type Lang} from '@/i18n/utils'
+
+interface Props {
+  lang: Lang
+  context?: string // Pre-filled in message field, e.g. "Property: Piso en La Carihuela"
+}
+
+const {lang, context} = Astro.props
+const t = useTranslations(lang)
+const formspreeId = import.meta.env.PUBLIC_FORMSPREE_ID
+const action = formspreeId ? `https://formspree.io/f/${formspreeId}` : ''
+---
+
+<form action={action} method="POST" class="space-y-4">
+  {context && <input type="hidden" name="_subject" value={context} />}
+  {context && <input type="hidden" name="property" value={context} />}
+  <input type="hidden" name="_language" value={lang} />
+
+  <div class="grid sm:grid-cols-2 gap-4">
+    <label class="block">
+      <span class="text-sm text-ink-400">{t('contact.name')} *</span>
+      <input
+        type="text"
+        name="name"
+        required
+        class="mt-1 w-full px-4 py-3 bg-bone-200 border border-ink-200/50 rounded-md focus:outline-none focus:border-terracotta"
+      />
+    </label>
+    <label class="block">
+      <span class="text-sm text-ink-400">{t('contact.email')} *</span>
+      <input
+        type="email"
+        name="email"
+        required
+        class="mt-1 w-full px-4 py-3 bg-bone-200 border border-ink-200/50 rounded-md focus:outline-none focus:border-terracotta"
+      />
+    </label>
+  </div>
+  <label class="block">
+    <span class="text-sm text-ink-400">{t('contact.phone')}</span>
+    <input
+      type="tel"
+      name="phone"
+      class="mt-1 w-full px-4 py-3 bg-bone-200 border border-ink-200/50 rounded-md focus:outline-none focus:border-terracotta"
+    />
+  </label>
+  <label class="block">
+    <span class="text-sm text-ink-400">{t('contact.message')} *</span>
+    <textarea
+      name="message"
+      rows="5"
+      required
+      class="mt-1 w-full px-4 py-3 bg-bone-200 border border-ink-200/50 rounded-md focus:outline-none focus:border-terracotta"
+    >{context ? `${context}\n\n` : ''}</textarea>
+  </label>
+
+  <button type="submit" class="btn-primary">
+    {t('contact.send')}
+  </button>
+
+  {!formspreeId && (
+    <p class="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded p-2">
+      ⚠️ Formspree no configurado. Añade <code>PUBLIC_FORMSPREE_ID</code> en <code>.env</code>.
+    </p>
+  )}
+</form>

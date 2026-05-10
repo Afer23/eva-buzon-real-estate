@@ -1,0 +1,48 @@
+---
+import {getLangFromUrl, useTranslations, localizedPath} from '@/i18n/utils'
+import {getSiteSettings} from '@/lib/queries'
+
+const lang = getLangFromUrl(Astro.url)
+const t = useTranslations(lang)
+const settings = await getSiteSettings()
+const year = new Date().getFullYear()
+---
+
+<footer class="border-t border-ink-200/40 mt-16">
+  <div class="container-x py-12 grid gap-8 md:grid-cols-3 text-sm">
+    <div>
+      <p class="font-serif text-lg mb-2">{settings?.siteName || 'Eva Buzón Real Estate'}</p>
+      <p class="text-ink-300">Andalucía, España</p>
+    </div>
+    <div>
+      <p class="font-medium mb-3 text-ink-400">{t('nav.contact')}</p>
+      <ul class="space-y-2 text-ink-400">
+        {settings?.contactEmail && (
+          <li><a href={`mailto:${settings.contactEmail}`} class="hover:text-terracotta">{settings.contactEmail}</a></li>
+        )}
+        {settings?.whatsappNumber && (
+          <li><a href={`https://wa.me/${settings.whatsappNumber}`} class="hover:text-terracotta">+{settings.whatsappNumber}</a></li>
+        )}
+      </ul>
+    </div>
+    <div>
+      <p class="font-medium mb-3 text-ink-400">Redes</p>
+      <ul class="space-y-2 text-ink-400">
+        {settings?.instagramUrl && (
+          <li><a href={settings.instagramUrl} target="_blank" rel="noopener" class="hover:text-terracotta">Instagram</a></li>
+        )}
+        {settings?.facebookUrl && (
+          <li><a href={settings.facebookUrl} target="_blank" rel="noopener" class="hover:text-terracotta">Facebook</a></li>
+        )}
+      </ul>
+    </div>
+  </div>
+  <div class="border-t border-ink-200/40">
+    <div class="container-x py-4 text-xs text-ink-300 flex justify-between">
+      <span>© {year} Eva Buzón Martínez. {t('footer.rights')}</span>
+      <span>
+        <a href={localizedPath(lang, '/aviso-legal')} class="hover:text-terracotta">Aviso legal</a>
+      </span>
+    </div>
+  </div>
+</footer>

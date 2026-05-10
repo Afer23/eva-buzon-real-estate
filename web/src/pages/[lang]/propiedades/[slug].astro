@@ -1,0 +1,200 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import PropertyGallery from '@/components/PropertyGallery.astro'
+import WhatsAppButton from '@/components/WhatsAppButton.astro'
+import ShareButton from '@/components/ShareButton.astro'
+import ContactForm from '@/components/ContactForm.astro'
+import {getAllPropertySlugs, getPropertyBySlug, getSiteSettings} from '@/lib/queries'
+import {urlFor} from '@/lib/sanity'
+import {useTranslations, type Lang, pickLang, pickLangBlock, formatPrice} from '@/i18n/utils'
+import {toHTML} from '@portabletext/to-html'
+
+export async function getStaticPaths() {
+  const slugs = await getAllPropertySlugs()
+  const langs: Lang[] = ['es', 'en']
+  return langs.flatMap((lang) =>
+    slugs.map((slug) => ({params: {lang, slug}})),
+  )
+}
+
+const {lang, slug} = Astro.params as {lang: Lang; slug: string}
+const t = useTranslations(lang)
+
+const [property, settings] = await Promise.all([
+  getPropertyBySlug(slug),
+  getSiteSettings(),
+])
+
+if (!property) {
+  return Astro.redirect(`/${lang}/propiedades`)
+}
+
+const description = pickLang(property.shortDescription, lang)
+const longBlock = pickLangBlock(property.description, lang)
+const longHtml = longBlock ? toHTML(longBlock) : ''
+
+const whatsappPhone = settings?.whatsappNumber || ''
+const whatsappMsg = `${t('whatsapp.message')} "${property.title}" — ${Astro.url.toString()}`
+
+// Convert YouTube/Vimeo URL to embed
+const videoEmbed = (() => {
+  if (!property.videoUrl) return null
+  const url = property.videoUrl
+  const yt = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&?]+)/)
+  if (yt) return `https://www.youtube.com/embed/${yt[1]}`
+  const vimeo = url.match(/vimeo\.com\/(\d+)/)
+  if (vimeo) return `https://player.vimeo.com/video/${vimeo[1]}`
+  return null
+})()
+---
+
+<BaseLayout
+  title={property.title}
+  description={description}
+  image={property.mainImage}
+>
+  <article class="container-x py-8 md:py-12">
+    <!-- Breadcrumb -->
+    <nav class="text-xs text-ink-300 mb-4">
+      <a href={`/${lang}/`} class="hover:text-terracotta">{t('nav.home')}</a>
+      <span class="mx-2">/</span>
+      <a href={`/${lang}/propiedades`} class="hover:text-terracotta">{t('nav.properties')}</a>
+      <span class="mx-2">/</span>
+      <span class="text-ink-400">{property.title}</span>
+    </nav>
+
+    <!-- Header -->
+    <header class="mb-8">
+      <p class="text-sm uppercase tracking-wider text-terracotta mb-2">
+        {t(`property.operation.${property.operation}` as any)} · {property.city}
+        {property.neighborhood && ` · ${property.neighborhood}`}
+      </p>
+      <h1 class="font-serif text-3xl md:text-5xl mb-4">{property.title}</h1>
+      <p class="text-2xl md:text-3xl font-medium">
+        {formatPrice(property.price, property.operation, lang)}
+      </p>
+    </header>
+
+    <!-- Gallery -->
+    <PropertyGallery
+      mainImage={property.mainImage}
+      gallery={property.gallery}
+      title={property.title}
+    />
+
+    <!-- Body grid -->
+    <div class="grid lg:grid-cols-3 gap-12 mt-12">
+      <div class="lg:col-span-2 space-y-8">
+        <!-- Quick stats -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 py-6 border-y border-ink-200/40">
+          {property.bedrooms != null && (
+            <div>
+              <p class="font-serif text-2xl">{property.bedrooms}</p>
+              <p class="text-xs uppercase tracking-wider text-ink-300">{t('property.bedrooms')}</p>
+            </div>
+          )}
+          {property.bathrooms != null && (
+            <div>
+              <p class="font-serif text-2xl">{property.bathrooms}</p>
+              <p class="text-xs uppercase tracking-wider text-ink-300">{t('property.bathrooms')}</p>
+            </div>
+          )}
+          {property.area && (
+            <div>
+              <p class="font-serif text-2xl">{property.area}</p>
+              <p class="text-xs uppercase tracking-wider text-ink-300">{t('property.area')}</p>
+            </div>
+          )}
+          {property.plotArea && (
+            <div>
+              <p class="font-serif text-2xl">{property.plotArea}</p>
+              <p class="text-xs uppercase tracking-wider text-ink-300">{t('property.plotArea')}</p>
+            </div>
+          )}
+        </div>
+
+        <!-- Description -->
+        {description && (
+          <section>
+            <p class="text-lg leading-relaxed text-ink-400">{description}</p>
+          </section>
+        )}
+
+        {longHtml && (
+          <section class="prose-property" set:html={longHtml} />
+        )}
+
+        <!-- Features -->
+        {property.features && property.features.length > 0 && (
+          <section>
+            <h2 class="font-serif text-2xl mb-4">{t('property.features')}</h2>
+            <ul class="grid grid-cols-2 sm:grid-cols-3 gap-2 text-sm">
+              {property.features.map((f) => (
+                <li class="flex items-center gap-2">
+                  <span class="text-terracotta">✓</span>
+                  {t(`feat.${f}` as any)}
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
+        {property.energyRating && (
+          <section>
+            <h3 class="text-sm uppercase tracking-wider text-ink-300">{t('property.energyRating')}</h3>
+            <p class="font-serif text-2xl">{property.energyRating}</p>
+          </section>
+        )}
+
+        <!-- Video -->
+        {videoEmbed && (
+          <section>
+            <h2 class="font-serif text-2xl mb-4">{t('property.video')}</h2>
+            <div class="aspect-video">
+              <iframe
+                src={videoEmbed}
+                class="w-full h-full rounded"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowfullscreen
+              />
+            </div>
+          </section>
+        )}
+
+        <!-- Location -->
+        {property.address && (
+          <section>
+            <h2 class="font-serif text-2xl mb-2">{t('property.location')}</h2>
+            <p class="text-ink-400">
+              {property.address}, {property.city}
+              {property.neighborhood && ` · ${property.neighborhood}`}
+            </p>
+          </section>
+        )}
+      </div>
+
+      <!-- Sidebar -->
+      <aside class="lg:col-span-1">
+        <div class="lg:sticky lg:top-24 space-y-3 p-6 bg-bone-200 rounded-lg">
+          <p class="font-serif text-xl">{t('property.contact.cta')}</p>
+          <p class="text-sm text-ink-400">
+            {description && description.substring(0, 100)}…
+          </p>
+          {whatsappPhone && (
+            <WhatsAppButton phone={whatsappPhone} message={whatsappMsg} lang={lang} fullWidth />
+          )}
+          <a href={`/${lang}/contacto?ref=${encodeURIComponent(property.title)}`} class="btn-primary w-full">
+            {t('contact.send')}
+          </a>
+          <ShareButton url={Astro.url.toString()} title={property.title} lang={lang} />
+        </div>
+      </aside>
+    </div>
+
+    <!-- Inline contact form at bottom -->
+    <section class="mt-16 max-w-2xl mx-auto">
+      <h2 class="font-serif text-3xl mb-6 text-center">{t('property.contact.cta')}</h2>
+      <ContactForm lang={lang} context={`${property.title} (${Astro.url.toString()})`} />
+    </section>
+  </article>
+</BaseLayout>

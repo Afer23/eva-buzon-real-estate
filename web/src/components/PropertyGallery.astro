@@ -1,0 +1,57 @@
+---
+import {urlFor} from '@/lib/sanity'
+
+interface Props {
+  mainImage: any
+  gallery?: any[]
+  title: string
+}
+
+const {mainImage, gallery = [], title} = Astro.props
+const allImages = [mainImage, ...gallery].filter(Boolean)
+---
+
+<div class="grid grid-cols-1 md:grid-cols-4 md:grid-rows-2 gap-2 rounded-lg overflow-hidden">
+  {allImages[0] && (
+    <div class="md:col-span-2 md:row-span-2 aspect-[4/3] md:aspect-auto">
+      <img
+        src={urlFor(allImages[0]).width(1400).height(1000).fit('crop').url()}
+        alt={title}
+        class="w-full h-full object-cover"
+      />
+    </div>
+  )}
+  {allImages.slice(1, 5).map((img, i) => (
+    <div class={`hidden md:block aspect-[4/3] ${i === 3 ? 'relative' : ''}`}>
+      <img
+        src={urlFor(img).width(700).height(500).fit('crop').url()}
+        alt={`${title} - ${i + 2}`}
+        loading="lazy"
+        class="w-full h-full object-cover"
+      />
+      {i === 3 && allImages.length > 5 && (
+        <a
+          href="#all-photos"
+          class="absolute inset-0 bg-black/50 text-white flex items-center justify-center text-sm font-medium hover:bg-black/60"
+        >
+          +{allImages.length - 5} fotos
+        </a>
+      )}
+    </div>
+  ))}
+</div>
+
+{allImages.length > 1 && (
+  <div id="all-photos" class="mt-8 grid grid-cols-2 md:grid-cols-3 gap-2">
+    {allImages.map((img, i) => (
+      <div class="aspect-[4/3]">
+        <img
+          src={urlFor(img).width(800).height(600).fit('crop').url()}
+          alt={`${title} - ${i + 1}`}
+          loading="lazy"
+          class="w-full h-full object-cover rounded"
+        />
+      </div>
+    ))}
+  </div>
+)}

@@ -1,0 +1,63 @@
+---
+import type {Property} from '@/lib/queries'
+import {urlFor} from '@/lib/sanity'
+import {useTranslations, type Lang, pickLang, formatPrice, localizedPath} from '@/i18n/utils'
+
+interface Props {
+  property: Property
+  lang: Lang
+}
+
+const {property, lang} = Astro.props
+const t = useTranslations(lang)
+
+const image = property.mainImage
+  ? urlFor(property.mainImage).width(800).height(600).fit('crop').url()
+  : ''
+
+const href = localizedPath(lang, `/propiedades/${property.slug}`)
+const subtitle = pickLang(property.shortDescription, lang)
+---
+
+<a href={href} class="group block">
+  <div class="aspect-[4/3] overflow-hidden rounded-lg bg-ink-200/30 relative">
+    {image && (
+      <img
+        src={image}
+        alt={property.title}
+        loading="lazy"
+        class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+      />
+    )}
+    {property.status === 'reserved' && (
+      <span class="absolute top-3 left-3 bg-amber-500 text-white text-xs uppercase tracking-wider px-2 py-1 rounded">
+        {t('property.status.reserved')}
+      </span>
+    )}
+    {property.status === 'closed' && (
+      <span class="absolute top-3 left-3 bg-ink-500 text-white text-xs uppercase tracking-wider px-2 py-1 rounded">
+        {t('property.status.closed')}
+      </span>
+    )}
+    <span class="absolute top-3 right-3 bg-bone/95 text-ink text-xs px-2 py-1 rounded font-medium">
+      {t(`property.operation.${property.operation}` as any)}
+    </span>
+  </div>
+  <div class="pt-4 space-y-1">
+    <p class="text-xs uppercase tracking-wider text-ink-300">
+      {property.city}{property.neighborhood ? ` · ${property.neighborhood}` : ''}
+    </p>
+    <h3 class="font-serif text-lg group-hover:text-terracotta transition-colors">
+      {property.title}
+    </h3>
+    {subtitle && <p class="text-sm text-ink-400 line-clamp-2">{subtitle}</p>}
+    <div class="flex items-center justify-between pt-2">
+      <p class="font-medium text-ink">{formatPrice(property.price, property.operation, lang)}</p>
+      <p class="text-xs text-ink-300 space-x-2">
+        {property.bedrooms != null && <span>{property.bedrooms} hab</span>}
+        {property.bathrooms != null && <span>{property.bathrooms} baños</span>}
+        {property.area && <span>{property.area} m²</span>}
+      </p>
+    </div>
+  </div>
+</a>
