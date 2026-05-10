@@ -1,5 +1,5 @@
 import type {StructureBuilder} from 'sanity/structure'
-import {HomeIcon, HomeIcon, CogIcon} from '@sanity/icons'
+import {HomeIcon, CogIcon} from '@sanity/icons'
 
 export const deskStructure = (S: StructureBuilder) =>
   S.list()
