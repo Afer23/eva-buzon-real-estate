@@ -9,49 +9,222 @@ interface Props {
 
 const {mainImage, gallery = [], title} = Astro.props
 const allImages = [mainImage, ...gallery].filter(Boolean)
+
+// Pre-calcular las URLs grandes (1920px) para el lightbox
+const lightboxImages = allImages.map((img, i) => ({
+  thumb: urlFor(img).width(800).height(600).fit('crop').url(),
+  full: urlFor(img).width(1920).fit('max').url(),
+  alt: `${title} - ${i + 1}`,
+}))
 ---
 
 <div class="grid grid-cols-1 md:grid-cols-4 md:grid-rows-2 gap-2 rounded-lg overflow-hidden">
   {allImages[0] && (
-    <div class="md:col-span-2 md:row-span-2 aspect-[4/3] md:aspect-auto">
+    <button
+      type="button"
+      class="md:col-span-2 md:row-span-2 aspect-[4/3] md:aspect-auto cursor-zoom-in overflow-hidden group"
+      data-lightbox-open="0"
+      aria-label="Ver foto 1 ampliada"
+    >
       <img
         src={urlFor(allImages[0]).width(1400).height(1000).fit('crop').url()}
         alt={title}
-        class="w-full h-full object-cover"
+        class="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-300"
       />
-    </div>
+    </button>
   )}
   {allImages.slice(1, 5).map((img, i) => (
-    <div class={`hidden md:block aspect-[4/3] ${i === 3 ? 'relative' : ''}`}>
+    <button
+      type="button"
+      class={`hidden md:block aspect-[4/3] cursor-zoom-in overflow-hidden group ${i === 3 ? 'relative' : ''}`}
+      data-lightbox-open={i + 1}
+      aria-label={`Ver foto ${i + 2} ampliada`}
+    >
       <img
         src={urlFor(img).width(700).height(500).fit('crop').url()}
         alt={`${title} - ${i + 2}`}
         loading="lazy"
-        class="w-full h-full object-cover"
+        class="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-300"
       />
       {i === 3 && allImages.length > 5 && (
-        <a
-          href="#all-photos"
-          class="absolute inset-0 bg-black/50 text-white flex items-center justify-center text-sm font-medium hover:bg-black/60"
+        <span
+          class="absolute inset-0 bg-black/50 text-white flex items-center justify-center text-sm font-medium group-hover:bg-black/60 pointer-events-none"
         >
           +{allImages.length - 5} fotos
-        </a>
+        </span>
       )}
-    </div>
+    </button>
   ))}
 </div>
 
 {allImages.length > 1 && (
   <div id="all-photos" class="mt-8 grid grid-cols-2 md:grid-cols-3 gap-2">
     {allImages.map((img, i) => (
-      <div class="aspect-[4/3]">
+      <button
+        type="button"
+        class="aspect-[4/3] cursor-zoom-in overflow-hidden rounded group"
+        data-lightbox-open={i}
+        aria-label={`Ver foto ${i + 1} ampliada`}
+      >
         <img
           src={urlFor(img).width(800).height(600).fit('crop').url()}
           alt={`${title} - ${i + 1}`}
           loading="lazy"
-          class="w-full h-full object-cover rounded"
+          class="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-300"
         />
-      </div>
+      </button>
     ))}
   </div>
 )}
+
+<!-- Lightbox modal -->
+<div
+  id="lightbox"
+  class="fixed inset-0 z-[100] bg-black/95 hidden items-center justify-center select-none"
+  role="dialog"
+  aria-modal="true"
+  aria-label="Galería de fotos"
+>
+  <!-- Cerrar -->
+  <button
+    type="button"
+    id="lightbox-close"
+    class="absolute top-4 right-4 md:top-6 md:right-6 z-10 w-12 h-12 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
+    aria-label="Cerrar galería"
+  >
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="18" y1="6" x2="6" y2="18"></line>
+      <line x1="6" y1="6" x2="18" y2="18"></line>
+    </svg>
+  </button>
+
+  <!-- Contador -->
+  <div
+    id="lightbox-counter"
+    class="absolute top-4 left-4 md:top-6 md:left-6 z-10 px-3 py-1.5 rounded-full bg-white/10 text-white text-sm font-medium"
+  >
+    <span id="lightbox-current">1</span> / <span id="lightbox-total">{allImages.length}</span>
+  </div>
+
+  <!-- Imagen -->
+  <div class="relative w-full h-full flex items-center justify-center px-4 md:px-20">
+    <img
+      id="lightbox-image"
+      src=""
+      alt=""
+      class="max-w-full max-h-full object-contain"
+    />
+  </div>
+
+  <!-- Prev -->
+  <button
+    type="button"
+    id="lightbox-prev"
+    class="absolute left-2 md:left-6 top-1/2 -translate-y-1/2 z-10 w-12 h-12 md:w-14 md:h-14 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
+    aria-label="Foto anterior"
+  >
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="15 18 9 12 15 6"></polyline>
+    </svg>
+  </button>
+
+  <!-- Next -->
+  <button
+    type="button"
+    id="lightbox-next"
+    class="absolute right-2 md:right-6 top-1/2 -translate-y-1/2 z-10 w-12 h-12 md:w-14 md:h-14 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
+    aria-label="Foto siguiente"
+  >
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </button>
+</div>
+
+<!-- Datos para el lightbox: URLs grandes pre-renderizadas -->
+<script id="lightbox-data" type="application/json" set:html={JSON.stringify(lightboxImages)} />
+
+<script is:inline>
+  (function () {
+    const lightbox = document.getElementById('lightbox')
+    if (!lightbox) return
+
+    const dataEl = document.getElementById('lightbox-data')
+    const images = JSON.parse(dataEl?.textContent || '[]')
+    if (!images.length) return
+
+    const imgEl = document.getElementById('lightbox-image')
+    const currentEl = document.getElementById('lightbox-current')
+    const prevBtn = document.getElementById('lightbox-prev')
+    const nextBtn = document.getElementById('lightbox-next')
+    const closeBtn = document.getElementById('lightbox-close')
+
+    let currentIndex = 0
+    let touchStartX = 0
+    let touchEndX = 0
+
+    function show(index) {
+      currentIndex = ((index % images.length) + images.length) % images.length
+      const img = images[currentIndex]
+      imgEl.src = img.full
+      imgEl.alt = img.alt
+      currentEl.textContent = String(currentIndex + 1)
+      const nextImg = new Image()
+      nextImg.src = images[(currentIndex + 1) % images.length].full
+      const prevImg = new Image()
+      prevImg.src = images[(currentIndex - 1 + images.length) % images.length].full
+    }
+
+    function openLb(index) {
+      show(index)
+      lightbox.classList.remove('hidden')
+      lightbox.classList.add('flex')
+      document.body.style.overflow = 'hidden'
+    }
+
+    function closeLb() {
+      lightbox.classList.add('hidden')
+      lightbox.classList.remove('flex')
+      document.body.style.overflow = ''
+      imgEl.src = ''
+    }
+
+    function nextLb() { show(currentIndex + 1) }
+    function prevLb() { show(currentIndex - 1) }
+
+    document.querySelectorAll('[data-lightbox-open]').forEach((el) => {
+      el.addEventListener('click', (e) => {
+        e.preventDefault()
+        const idx = parseInt(el.getAttribute('data-lightbox-open') || '0', 10)
+        openLb(idx)
+      })
+    })
+
+    closeBtn && closeBtn.addEventListener('click', closeLb)
+    prevBtn && prevBtn.addEventListener('click', (e) => { e.stopPropagation(); prevLb() })
+    nextBtn && nextBtn.addEventListener('click', (e) => { e.stopPropagation(); nextLb() })
+
+    lightbox.addEventListener('click', (e) => {
+      if (e.target === lightbox || e.target === imgEl.parentElement) closeLb()
+    })
+
+    document.addEventListener('keydown', (e) => {
+      if (lightbox.classList.contains('hidden')) return
+      if (e.key === 'Escape') closeLb()
+      else if (e.key === 'ArrowRight') nextLb()
+      else if (e.key === 'ArrowLeft') prevLb()
+    })
+
+    lightbox.addEventListener('touchstart', (e) => {
+      touchStartX = e.changedTouches[0].screenX
+    }, {passive: true})
+    lightbox.addEventListener('touchend', (e) => {
+      touchEndX = e.changedTouches[0].screenX
+      const diff = touchEndX - touchStartX
+      if (Math.abs(diff) > 50) {
+        if (diff < 0) nextLb()
+        else prevLb()
+      }
+    }, {passive: true})
+  })()
+</script>
